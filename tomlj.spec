@@ -14,6 +14,10 @@ BuildRequires:	antlr4
 BuildRequires:	python
 BuildRequires:	sysjar
 
+# build-classpath belongs to javapackages-tools, which is not installed
+# in this build root. antlr4 installs this jar.
+%global antlr_jar %{_javadir}/antlr4-runtime.jar
+
 %description
 TomlJ parses and writes TOML. Gradle 8.11.1 reads version catalogs
 through Toml.parse, getTable, getString, getArray, getBoolean and
@@ -49,7 +53,7 @@ gen=$(pwd)/generated
 find src/main/java generated -name '*.java' > sources.list
 mkdir -p classes
 javac --release 8 -encoding UTF-8 -Xlint:-options \
-	-cp "$(build-classpath antlr4-runtime)" \
+	-cp %{antlr_jar} \
 	-d classes @sources.list
 jar cf %{name}.jar -C classes .
 cat > %{name}.pom <<EOF
@@ -130,9 +134,9 @@ public class Smoke {
 }
 END
 javac --release 8 -encoding UTF-8 -Xlint:-options \
-	-cp %{name}.jar:"$(build-classpath antlr4-runtime)" \
+	-cp %{name}.jar:%{antlr_jar} \
 	-d check check/Smoke.java
-java -cp check:%{name}.jar:"$(build-classpath antlr4-runtime)" Smoke
+java -cp check:%{name}.jar:%{antlr_jar} Smoke
 
 %install
 sysjar install --buildroot %{buildroot} \
